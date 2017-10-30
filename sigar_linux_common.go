@@ -101,6 +101,31 @@ func (self *Cpu) Get() error {
 	})
 }
 
+func (self *CpuExt) Get() error {
+	return readFile(Procd+"/stat", func(line string) bool {
+		if len(line) > 4 && line[0:4] == "cpu " {
+			parseCpuStat(&self.Cpu, line)
+		} else if len(line) > 5 && line[0:5] == "intr " {
+			fields := strings.Fields(line)
+			self.Intr, _ = strtoull(fields[1])
+		} else if len(line) > 5 && line[0:5] == "ctxt " {
+			fields := strings.Fields(line)
+			self.Ctxt, _ = strtoull(fields[1])
+		} else if len(line) > 10 && line[0:10] == "processes " {
+			fields := strings.Fields(line)
+			self.Processes, _ = strtoull(fields[1])
+		} else if len(line) > 14 && line[0:14] == "procs_running " {
+			fields := strings.Fields(line)
+			self.ProcRunning, _ = strtoull(fields[1])
+		} else if len(line) > 14 && line[0:14] == "procs_blocked " {
+			fields := strings.Fields(line)
+			self.ProcBlocked, _ = strtoull(fields[1])
+		}
+		return true
+
+	})
+}
+
 func (self *CpuList) Get() error {
 	capacity := len(self.List)
 	if capacity == 0 {

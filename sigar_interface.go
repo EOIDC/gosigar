@@ -41,6 +41,16 @@ type Cpu struct {
 	Stolen  uint64
 }
 
+type CpuExt struct {
+	Cpu
+	Intr uint64 //counts of interrupts serviced since boot time
+	Ctxt uint64 //number of context switches that the system underwent
+	Processes uint64 //number of forks since boot
+	ProcRunning uint64 //number of processes in runnable state ( > 2.5.45 )
+	ProcBlocked uint64 //number of processes in blocked state ( > 2.5.45 )
+}
+
+
 func (cpu *Cpu) Total() uint64 {
 	return cpu.User + cpu.Nice + cpu.Sys + cpu.Idle +
 		cpu.Wait + cpu.Irq + cpu.SoftIrq + cpu.Stolen

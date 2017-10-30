@@ -105,6 +105,45 @@ func TestLinuxCPU(t *testing.T) {
 	}
 }
 
+func TestLinuxCPUExt(t *testing.T) {
+	setUp(t)
+	defer tearDown(t)
+
+	tests :=  []struct {
+		stat string
+		expected uint64
+	}{
+		{"cpu 25 1 2 3 4 5 6 7\n", 25},
+		{"intr 44459019 133 10 0\n", 44459019},
+		{"ctxt 78785841\n", 78785841},
+		{"processes 275087\n", 275087},
+		{"procs_running 1\n", 1},
+		{"procs_blocked 0\n", 0},
+	}
+
+	statFile := procd + "/stat"
+	statContents := make([]byte, 0)
+	for _, test := range tests {
+		statContents = append(statContents, []byte(test.stat)...)
+	}
+
+	err := ioutil.WriteFile(statFile, statContents, 0644)
+	defer os.RemoveAll(statFile)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	cpuExt := sigar.CpuExt{}
+	if assert.NoError(t, cpuExt.Get()) {
+		assert.Equal(t, uint64(tests[0].expected), cpuExt.User, "cpu.User")
+		assert.Equal(t, uint64(tests[1].expected), cpuExt.Intr, "cpu.Intr")
+		assert.Equal(t, uint64(tests[2].expected), cpuExt.Ctxt, "cpu.Ctxt")
+		assert.Equal(t, uint64(tests[3].expected), cpuExt.Processes, "cpu.Processes")
+		assert.Equal(t, uint64(tests[4].expected), cpuExt.ProcRunning, "cpu.ProcRunning")
+		assert.Equal(t, uint64(tests[5].expected), cpuExt.ProcBlocked, "cpu.ProcBlocked")
+	}
+}
+
 func TestLinuxCollectCpuStats(t *testing.T) {
 	setUp(t)
 	defer tearDown(t)
