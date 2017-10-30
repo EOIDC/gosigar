@@ -109,8 +109,8 @@ func TestLinuxCPUExt(t *testing.T) {
 	setUp(t)
 	defer tearDown(t)
 
-	tests :=  []struct {
-		stat string
+	tests := []struct {
+		stat     string
 		expected uint64
 	}{
 		{"cpu 25 1 2 3 4 5 6 7\n", 25},
@@ -474,6 +474,190 @@ DirectMap1G:    147849216 kB
 		assert.Equal(t, uint64(0), swap.Free)
 	}
 
+}
+
+func TestLinuxMemExtension(t *testing.T) {
+	setUp(t)
+	defer tearDown(t)
+
+	meminfoContents := `
+MemTotal:       148535680 kB
+MemFree:          417356 kB
+MemAvailable:          0 kB
+Buffers:            1728 kB
+Cached:           129928 kB
+SwapCached:         8208 kB
+Active:         141088676 kB
+Inactive:        5568132 kB
+Active(anon):   141076780 kB
+Inactive(anon):  5556936 kB
+Active(file):      11896 kB
+Inactive(file):    11196 kB
+Unevictable:        3648 kB
+Mlocked:            3648 kB
+SwapTotal:       4882428 kB
+SwapFree:              0 kB
+Dirty:               808 kB
+Writeback:           220 kB
+AnonPages:      146521272 kB
+Mapped:            41384 kB
+Shmem:            105864 kB
+Slab:             522648 kB
+SReclaimable:     233508 kB
+SUnreclaim:       289140 kB
+KernelStack:       85024 kB
+PageTables:       368760 kB
+NFS_Unstable:          0 kB
+Bounce:                0 kB
+WritebackTmp:          0 kB
+CommitLimit:    79150268 kB
+Committed_AS:   272491684 kB
+VmallocTotal:   34359738367 kB
+VmallocUsed:           0 kB
+VmallocChunk:          0 kB
+HardwareCorrupted:     0 kB
+AnonHugePages:  78061568 kB
+ShmemHugePages:        0 kB
+ShmemPmdMapped:        0 kB
+CmaTotal:              0 kB
+CmaFree:               0 kB
+HugePages_Total:       0
+HugePages_Free:        0
+HugePages_Rsvd:        0
+HugePages_Surp:        0
+Hugepagesize:       2048 kB
+DirectMap4k:      124388 kB
+DirectMap2M:     5105664 kB
+DirectMap1G:    147849216 kB
+`
+	meminfoFile := procd + "/meminfo"
+	err := ioutil.WriteFile(meminfoFile, []byte(meminfoContents), 0444)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer os.RemoveAll(meminfoFile)
+
+	var vmstatInfoContents = `
+workingset_refault 0
+workingset_activate 0
+workingset_nodereclaim 0
+nr_anon_transparent_hugepages 209
+nr_free_cma 0
+nr_dirty_threshold 165006
+nr_dirty_background_threshold 55002
+pgpgin 762817
+pgpgout 3746569
+pswpin 0
+pswpout 0
+	`
+
+	vmstatFile := procd + "/vmstat"
+	err = ioutil.WriteFile(vmstatFile, []byte(vmstatInfoContents), 0444)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer os.RemoveAll(vmstatFile)
+
+	memExt := sigar.MemExt{}
+	if assert.NoError(t, memExt.Get()) {
+		assert.Equal(t, uint64(148535680*1024), memExt.Total)
+		assert.Equal(t, uint64(417356*1024), memExt.Free)
+		assert.Equal(t, uint64(0), memExt.ActualFree)
+		assert.Equal(t, uint64(522648*1024), memExt.Slab)
+		assert.Equal(t, uint64(762817), memExt.PageIn)
+		assert.Equal(t, uint64(3746569), memExt.PageOut)
+	}
+}
+
+func TestLinuxSwapExtension(t *testing.T) {
+	setUp(t)
+	defer tearDown(t)
+
+	meminfoContents := `
+MemTotal:       148535680 kB
+MemFree:          417356 kB
+MemAvailable:          0 kB
+Buffers:            1728 kB
+Cached:           129928 kB
+SwapCached:         8208 kB
+Active:         141088676 kB
+Inactive:        5568132 kB
+Active(anon):   141076780 kB
+Inactive(anon):  5556936 kB
+Active(file):      11896 kB
+Inactive(file):    11196 kB
+Unevictable:        3648 kB
+Mlocked:            3648 kB
+SwapTotal:       4882428 kB
+SwapFree:              0 kB
+Dirty:               808 kB
+Writeback:           220 kB
+AnonPages:      146521272 kB
+Mapped:            41384 kB
+Shmem:            105864 kB
+Slab:             522648 kB
+SReclaimable:     233508 kB
+SUnreclaim:       289140 kB
+KernelStack:       85024 kB
+PageTables:       368760 kB
+NFS_Unstable:          0 kB
+Bounce:                0 kB
+WritebackTmp:          0 kB
+CommitLimit:    79150268 kB
+Committed_AS:   272491684 kB
+VmallocTotal:   34359738367 kB
+VmallocUsed:           0 kB
+VmallocChunk:          0 kB
+HardwareCorrupted:     0 kB
+AnonHugePages:  78061568 kB
+ShmemHugePages:        0 kB
+ShmemPmdMapped:        0 kB
+CmaTotal:              0 kB
+CmaFree:               0 kB
+HugePages_Total:       0
+HugePages_Free:        0
+HugePages_Rsvd:        0
+HugePages_Surp:        0
+Hugepagesize:       2048 kB
+DirectMap4k:      124388 kB
+DirectMap2M:     5105664 kB
+DirectMap1G:    147849216 kB
+`
+	meminfoFile := procd + "/meminfo"
+	err := ioutil.WriteFile(meminfoFile, []byte(meminfoContents), 0444)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer os.RemoveAll(meminfoFile)
+
+	var vmstatInfoContents = `
+workingset_refault 0
+workingset_activate 0
+workingset_nodereclaim 0
+nr_anon_transparent_hugepages 209
+nr_free_cma 0
+nr_dirty_threshold 165006
+nr_dirty_background_threshold 55002
+pgpgin 42612379
+pgpgout 4616204887
+pswpin 26557
+pswpout 233966
+`
+
+	vmstatFile := procd + "/vmstat"
+	err = ioutil.WriteFile(vmstatFile, []byte(vmstatInfoContents), 0444)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer os.RemoveAll(vmstatFile)
+
+	swapExt := sigar.SwapExt{}
+	if assert.NoError(t, swapExt.Get()) {
+		assert.Equal(t, uint64(0), swapExt.Free)
+		assert.Equal(t, uint64(4882428*1024), swapExt.Total)
+		assert.Equal(t, uint64(26557), swapExt.SwapIn)
+		assert.Equal(t, uint64(233966), swapExt.SwapOut)
+	}
 }
 
 func TestFDUsage(t *testing.T) {

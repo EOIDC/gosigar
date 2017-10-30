@@ -61,6 +61,7 @@ func (self *Mem) Get() error {
 
 	self.Total, _ = table["MemTotal"]
 	self.Free, _ = table["MemFree"]
+	self.Slab, _ = table["Slab"]
 	buffers, _ := table["Buffers"]
 	cached, _ := table["Cached"]
 
@@ -77,6 +78,27 @@ func (self *Mem) Get() error {
 	return nil
 }
 
+func (self *MemExt) Get() error {
+	err := self.Mem.Get()
+	if err != nil {
+		return err
+	}
+
+	readFile(Procd+"/vmstat", func(line string) bool {
+		fields := strings.Split(line, " ")
+		key := strings.TrimSpace(fields[0])
+		if key == "pgpgin" {
+			self.PageIn, _ = strtoull(fields[1])
+		} else if key == "pgpgout" {
+			self.PageOut, _ = strtoull(fields[1])
+		}
+
+		return true
+	})
+
+	return nil
+}
+
 func (self *Swap) Get() error {
 
 	table, err := parseMeminfo()
@@ -88,6 +110,28 @@ func (self *Swap) Get() error {
 
 	self.Used = self.Total - self.Free
 	return nil
+}
+
+func (self *SwapExt) Get() error {
+	err := self.Swap.Get()
+	if err != nil {
+		return err
+	}
+
+	readFile(Procd+"/vmstat", func(line string) bool {
+		fields := strings.Split(line, " ")
+		key := strings.TrimSpace(fields[0])
+		if key == "pswpin" {
+			self.SwapIn, _ = strtoull(fields[1])
+		} else if key == "pswpout" {
+			self.SwapOut, _ = strtoull(fields[1])
+		}
+
+		return true
+	})
+
+	return nil
+
 }
 
 func (self *Cpu) Get() error {

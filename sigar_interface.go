@@ -43,13 +43,12 @@ type Cpu struct {
 
 type CpuExt struct {
 	Cpu
-	Intr uint64 //counts of interrupts serviced since boot time
-	Ctxt uint64 //number of context switches that the system underwent
-	Processes uint64 //number of forks since boot
+	Intr        uint64 //counts of interrupts serviced since boot time
+	Ctxt        uint64 //number of context switches that the system underwent
+	Processes   uint64 //number of forks since boot
 	ProcRunning uint64 //number of processes in runnable state ( > 2.5.45 )
 	ProcBlocked uint64 //number of processes in blocked state ( > 2.5.45 )
 }
-
 
 func (cpu *Cpu) Total() uint64 {
 	return cpu.User + cpu.Nice + cpu.Sys + cpu.Idle +
@@ -83,12 +82,25 @@ type Mem struct {
 	Free       uint64
 	ActualFree uint64
 	ActualUsed uint64
+	Slab       uint64
+}
+
+type MemExt struct {
+	Mem
+	PageIn  uint64 //mem <- disk
+	PageOut uint64 //mem <- disk
 }
 
 type Swap struct {
 	Total uint64
 	Used  uint64
 	Free  uint64
+}
+
+type SwapExt struct {
+	Swap
+	SwapIn  uint64 //mem <- swap
+	SwapOut uint64 //mem -> swap
 }
 
 type CpuList struct {
