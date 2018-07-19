@@ -368,38 +368,38 @@ func (self *ProcTime) Get(pid int) error {
 }
 
 func (self *ProcArgs) Get(pid int) error {
-    contents, err := readProcFile(pid, "cmdline")
-    if err != nil {
-        return err
-    }
+	contents, err := readProcFile(pid, "cmdline")
+	if err != nil {
+		return err
+	}
 
-    bbuf := bytes.NewBuffer(contents)
+	bbuf := bytes.NewBuffer(contents)
 
-    var args []string
+	var args []string
 
-    for {
-        arg, err := bbuf.ReadBytes(0)
-        if arg != nil && len(arg) > 0 {
-            var part string
-            if arg[len(arg)-1] == 0x00 {
-                part = string(chop(arg))
-            } else {
-                part = string(arg)
-            }
+	for {
+		arg, err := bbuf.ReadBytes(0)
+		if arg != nil && len(arg) > 0 {
+			var part string
+			if arg[len(arg)-1] == 0x00 {
+				part = string(chop(arg))
+			} else {
+				part = string(arg)
+			}
 
 			if len(part) > 0 {
 				args = append(args, strings.Split(part, " ")...)
 			}
-        }
+		}
 
-        if err == io.EOF {
-            break
-        }
-    }
+		if err == io.EOF {
+			break
+		}
+	}
 
-    self.List = args
+	self.List = args
 
-    return nil
+	return nil
 }
 
 func (self *ProcEnv) Get(pid int) error {

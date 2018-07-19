@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/elastic/gosigar"
+	"github.com/eoidc/gosigar"
 )
 
 const output_format = "%-15s %4s %4s %5s %4s %-15s\n"
@@ -20,10 +20,14 @@ func main() {
 
 	for _, fs := range fslist.List {
 		dir_name := fs.DirName
-
 		usage := gosigar.FileSystemUsage{}
 
-		usage.Get(dir_name)
+		err := gosigar.FsPing(fs)
+		if  err == nil {
+			usage.Get(dir_name)
+		} else {
+			fmt.Println(err)
+		}
 
 		fmt.Fprintf(os.Stdout, output_format,
 			fs.DevName,

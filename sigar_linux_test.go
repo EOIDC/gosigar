@@ -7,8 +7,8 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
-	"testing"
 	"strings"
+	"testing"
 	"time"
 
 	sigar "github.com/elastic/gosigar"
@@ -88,49 +88,48 @@ func TestLinuxProcState(t *testing.T) {
 }
 
 func TestLinuxProcArgs(t *testing.T) {
-    setUp(t)
-    defer tearDown(t)
+	setUp(t)
+	defer tearDown(t)
 
-    test := []struct {
-        content []byte
-        expected []string
-    }{
-        //arguments is seperated by '\0', and end with '\0'
-        {[]byte{0x41, 0x00, 0x42, 0x00, 0x43, 0x00}, []string{"A","B","C"}},
-        //arguments is seperated by '\0', but not end with '\0'
-        {[]byte{0x41, 0x00, 0x42, 0x00, 0x43}, []string{"A","B","C"}},
-        //arguments is seperated by '\0', but some contains 0x20(space), which should be split
-        {[]byte{0x41, 0x00, 0x42, 0x00, 0x43, 0x20, 0x44}, []string{"A","B","C","D"}},
-        //arguments is seperated by 0x20(space), and end with '\0'
-        {[]byte{0x41, 0x20, 0x42, 0x20, 0x43, 0x20, 0x44, 0x00}, []string{"A","B","C","D"}},
-        //arguments is seperated by 0x20(space), but not end with '\0'
-        {[]byte{0x41, 0x20, 0x42, 0x20, 0x43, 0x20, 0x44}, []string{"A","B","C","D"}},
-        //more than one 0x00 included between arguments
-        {[]byte{0x41, 0x00, 0x00, 0x00, 0x42, 0x00, 0x00, 0x43}, []string{"A","B","C"}},
-        //more than one 0x00 at end of arguments
-        {[]byte{0x41, 0x00, 0x42, 0x00, 0x43, 0x00, 0x00, 0x00}, []string{"A","B","C"}},
-    }
+	test := []struct {
+		content  []byte
+		expected []string
+	}{
+		//arguments is seperated by '\0', and end with '\0'
+		{[]byte{0x41, 0x00, 0x42, 0x00, 0x43, 0x00}, []string{"A", "B", "C"}},
+		//arguments is seperated by '\0', but not end with '\0'
+		{[]byte{0x41, 0x00, 0x42, 0x00, 0x43}, []string{"A", "B", "C"}},
+		//arguments is seperated by '\0', but some contains 0x20(space), which should be split
+		{[]byte{0x41, 0x00, 0x42, 0x00, 0x43, 0x20, 0x44}, []string{"A", "B", "C", "D"}},
+		//arguments is seperated by 0x20(space), and end with '\0'
+		{[]byte{0x41, 0x20, 0x42, 0x20, 0x43, 0x20, 0x44, 0x00}, []string{"A", "B", "C", "D"}},
+		//arguments is seperated by 0x20(space), but not end with '\0'
+		{[]byte{0x41, 0x20, 0x42, 0x20, 0x43, 0x20, 0x44}, []string{"A", "B", "C", "D"}},
+		//more than one 0x00 included between arguments
+		{[]byte{0x41, 0x00, 0x00, 0x00, 0x42, 0x00, 0x00, 0x43}, []string{"A", "B", "C"}},
+		//more than one 0x00 at end of arguments
+		{[]byte{0x41, 0x00, 0x42, 0x00, 0x43, 0x00, 0x00, 0x00}, []string{"A", "B", "C"}},
+	}
 
-    for _, n := range test {
-        pid := rand.Int()
-        pidDir := filepath.Join(procd, strconv.Itoa(pid))
-        err := os.Mkdir(pidDir, 0755)
-        if err != nil {
-            t.Fatal(err)
-        }
-        defer os.RemoveAll(pidDir)
-        pidCmdlineFile := filepath.Join(pidDir, "cmdline")
-        ioutil.WriteFile(pidCmdlineFile, n.content, 0644)
-        if err != nil {
-            t.Fatal(err)
-        }
+	for _, n := range test {
+		pid := rand.Int()
+		pidDir := filepath.Join(procd, strconv.Itoa(pid))
+		err := os.Mkdir(pidDir, 0755)
+		if err != nil {
+			t.Fatal(err)
+		}
+		defer os.RemoveAll(pidDir)
+		pidCmdlineFile := filepath.Join(pidDir, "cmdline")
+		ioutil.WriteFile(pidCmdlineFile, n.content, 0644)
+		if err != nil {
+			t.Fatal(err)
+		}
 
-        args := sigar.ProcArgs{}
-        args.Get(pid)
-        assert.Equal(t, strings.Join(n.expected, ","), strings.Join(args.List, ","))
-    }
+		args := sigar.ProcArgs{}
+		args.Get(pid)
+		assert.Equal(t, strings.Join(n.expected, ","), strings.Join(args.List, ","))
+	}
 }
-
 
 func TestLinuxCPU(t *testing.T) {
 	setUp(t)
