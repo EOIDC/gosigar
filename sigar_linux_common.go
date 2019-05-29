@@ -64,12 +64,15 @@ func (self *Mem) Get() error {
 	buffers, _ := table["Buffers"]
 	cached, _ := table["Cached"]
 
-	if available, ok := table["MemAvailable"]; ok {
-		// MemAvailable is in /proc/meminfo (kernel 3.14+)
-		self.ActualFree = available
-	} else {
-		self.ActualFree = self.Free + buffers + cached
-	}
+	/*
+		if available, ok := table["MemAvailable"]; ok {
+			// MemAvailable is in /proc/meminfo (kernel 3.14+)
+			self.ActualFree = available
+		} else {
+			self.ActualFree = self.Free + buffers + cached
+		}
+	*/
+	self.ActualFree = self.Free + buffers + cached
 
 	self.Used = self.Total - self.Free
 	self.ActualUsed = self.Total - self.ActualFree
