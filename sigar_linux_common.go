@@ -63,16 +63,21 @@ func (self *Mem) Get() error {
 	self.Slab, _ = table["Slab"]
 	buffers, _ := table["Buffers"]
 	cached, _ := table["Cached"]
+	inActiveFile, ok_inaf := table["Inactive(file)"]
+	activeFile, ok_af := table["Active(file)"]
+	sReclaimable, ok_sre := table["SReclaimable"]
+	inActive, ok_ina := table["Inactive"]
+	anonPages, ok_ap := table["AnonPages"]
 
-	/*
-		if available, ok := table["MemAvailable"]; ok {
-			// MemAvailable is in /proc/meminfo (kernel 3.14+)
-			self.ActualFree = available
-		} else {
-			self.ActualFree = self.Free + buffers + cached
-		}
-	*/
-	self.ActualFree = self.Free + buffers + cached
+	if available, ok := table["MemAvailable"]; ok {
+		self.ActualFree = available
+	} else if ok_inaf && ok_af && ok_sre {
+		self.ActualFree = self.Free + inActiveFile + activeFile + sReclaimable
+	} else if ok_ina && ok_ap {
+		self.ActualFree = self.Free + inActive + anonPages
+	} else {
+		self.ActualFree = self.Free + buffers + cached
+	}
 
 	self.Used = self.Total - self.Free
 	self.ActualUsed = self.Total - self.ActualFree
