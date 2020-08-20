@@ -42,7 +42,7 @@ func FsPing(self FileSystem) error {
 		return nil
 	}
 
-	comma := strings.Index(self.DevName, ":")
+	comma := strings.LastIndex(self.DevName, ":")
 	if comma <= 0 {
 		return nil
 	}
